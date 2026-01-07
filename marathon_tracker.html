@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NYC Marathon 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: dark light;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #f5f5f5;
+      min-height: 100vh;
+    }
+    .app {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1rem;
+      padding-bottom: 2rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding: 1rem 0;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin: 0.5rem 0 0.25rem;
+      background: linear-gradient(135deg, #00d4ff, #00b050);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .sub {
+      font-size: 0.9rem;
+      color: #999;
+    }
+    .card {
+      background: linear-gradient(135deg, #1d1d1d 0%, #252525 100%);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+      border: 1px solid #333;
+    }
+    .row {
+      margin-bottom: 1rem;
+    }
+    .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #666;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    .value {
+      font-size: 1.1rem;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    .workout-value {
+      font-weight: 600;
+      color: #00d4ff;
+    }
+    .notes {
+      font-size: 0.95rem;
+      color: #ccc;
+      line-height: 1.6;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+    button {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-main {
+      background: linear-gradient(135deg, #00b050, #00a045);
+      color: #fff;
+      grid-column: 2;
+    }
+    .btn-main:hover:not(:disabled) {
+      background: linear-gradient(135deg, #00a045, #009940);
+      box-shadow: 0 4px 12px rgba(0, 176, 80, 0.4);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: #ddd;
+      border: 1.5px solid #444;
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: #222;
+      border-color: #666;
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 8px;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+    }
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-done { 
+      background: #00b050;
+      box-shadow: 0 0 8px rgba(0, 176, 80, 0.6);
+    }
+    .dot-pending { 
+      background: #cc3333;
+      box-shadow: 0 0 8px rgba(204, 51, 51, 0.4);
+    }
+    .date-picker {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    input[type="date"] {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #0a0a0a;
+      color: #f5f5f5;
+      font-size: 0.95rem;
+    }
+    .progress {
+      margin-top: 1.25rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+      border-radius: 8px;
+      border-left: 3px solid #00d4ff;
+      text-align: center;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #333;
+      border-radius: 3px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00b050, #00d4ff);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .small {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🏃 NYC Marathon 2026</h1>
+      <div class="sub">Training Plan Tracker</div>
+    </header>
+
+    <div class="card">
+      <div class="row">
+        <div class="label">Date</div>
+        <div class="value" id="dateDisplay">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Day of Week</div>
+        <div class="value" id="dowDisplay">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Workout</div>
+        <div class="value workout-value" id="workoutDisplay">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Details</div>
+        <div class="value notes" id="notesDisplay">—</div>
+      </div>
+
+      <div class="status" id="statusRow">
+        <div class="status-dot dot-pending" id="statusDot"></div>
+        <div id="statusText">Not completed</div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-ghost" id="prevBtn">&larr;</button>
+        <button class="btn-main" id="toggleDoneBtn">Mark Done</button>
+        <button class="btn-ghost" id="nextBtn">&rarr;</button>
+      </div>
+
+      <div class="date-picker">
+        <span>📅 Jump to:</span>
+        <input type="date" id="jumpDate" />
+      </div>
+
+      <div class="progress">
+        <div id="progressText">—</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div class="small">
+        ✓ All progress saved locally on your device
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PLAN = [
+      ["2026-01-07", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-08", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-01-09", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-01-10", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-11", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-01-12", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-01-13", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-01-14", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-15", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-01-16", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-01-17", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-18", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-01-19", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-01-20", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-01-21", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-22", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-01-23", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-01-24", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-25", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-01-26", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-01-27", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-01-28", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-01-29", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-01-30", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-01-31", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-01", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-02-02", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-02-03", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-02-04", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-05", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-02-06", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-02-07", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-08", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-02-09", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-02-10", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-02-11", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-12", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-02-13", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-02-14", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-15", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-02-16", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-02-17", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-02-18", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-19", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-02-20", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-02-21", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-22", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-02-23", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-02-24", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-02-25", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-02-26", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-02-27", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-02-28", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-01", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-03-02", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-03-03", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-03-04", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-05", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-03-06", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-03-07", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-08", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-03-09", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-03-10", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-03-11", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-12", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-03-13", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-03-14", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-15", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-03-16", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-03-17", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-03-18", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-19", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-03-20", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-03-21", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-22", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-03-23", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-03-24", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-03-25", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-26", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-03-27", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-03-28", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-03-29", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-03-30", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-03-31", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-04-01", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-02", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-04-03", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-04-04", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-05", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-04-06", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-04-07", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-04-08", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-09", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-04-10", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-04-11", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-12", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-04-13", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-04-14", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-04-15", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-16", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-04-17", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-04-18", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-19", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-04-20", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-04-21", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-04-22", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-23", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-04-24", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-04-25", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-26", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-04-27", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-04-28", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-04-29", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-04-30", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-05-01", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-05-02", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-05-03", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-05-04", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-05-05", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-05-06", "Wednesday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-05-07", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-05-08", "Friday", "Quality Run", "Tempo: 4–6 mi total, tempo @ 8:15–8:30/mi"],
+      ["2026-05-09", "Saturday", "Easy Run", "5–6 miles @ 9:30–10:15/mi"],
+      ["2026-05-10", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-05-11", "Monday", "Long Run", "8–12 miles @ 9:45–10:30/mi"],
+      ["2026-05-12", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-05-13", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-05-14", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-05-15", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-05-16", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-05-17", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-05-18", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-05-19", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-05-20", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-05-21", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-05-22", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-05-23", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-05-24", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-05-25", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-05-26", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-05-27", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-05-28", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-05-29", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-05-30", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-05-31", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-06-01", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-06-02", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-06-03", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-04", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-06-05", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-06-06", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-07", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-06-08", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-06-09", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-06-10", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-11", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-06-12", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-06-13", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-14", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-06-15", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-06-16", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-06-17", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-18", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-06-19", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-06-20", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-21", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-06-22", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-06-23", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-06-24", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-25", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-06-26", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-06-27", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-06-28", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-06-29", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-06-30", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-07-01", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-02", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-07-03", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-07-04", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-05", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-07-06", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-07-07", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-07-08", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-09", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-07-10", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-07-11", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-12", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-07-13", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-07-14", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-07-15", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-16", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-07-17", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-07-18", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-19", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-07-20", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-07-21", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-07-22", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-23", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-07-24", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-07-25", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-26", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-07-27", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-07-28", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-07-29", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-07-30", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-07-31", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-08-01", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-02", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-08-03", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-08-04", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-08-05", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-06", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-08-07", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-08-08", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-09", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-08-10", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-08-11", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-08-12", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-13", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-08-14", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-08-15", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-16", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-08-17", "Monday", "Long Run", "14–18 miles, last 3–5 @ MP"],
+      ["2026-08-18", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-08-19", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-20", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-08-21", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-08-22", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-23", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-08-24", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-08-25", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-08-26", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-27", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-08-28", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-08-29", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-08-30", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-08-31", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-09-01", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-09-02", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-09-03", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-09-04", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-09-05", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-09-06", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-09-07", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-09-08", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-09-09", "Wednesday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-09-10", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-09-11", "Friday", "Quality Run", "MP/Intervals: 6–9 mi total, MP @ 8:35/mi"],
+      ["2026-09-12", "Saturday", "Easy Run", "6–8 miles @ 9:15–10:00/mi"],
+      ["2026-09-13", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-09-14", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-09-15", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-09-16", "Wednesday", "Easy Run", "4–6 miles easy, relaxed"],
+      ["2026-09-17", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-09-18", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume"],
+      ["2026-09-19", "Saturday", "Easy Run", "4–6 miles easy, relaxed"],
+      ["2026-09-20", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-09-21", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-09-22", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-09-23", "Wednesday", "Easy Run", "4–6 miles easy, relaxed"],
+      ["2026-09-24", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-09-25", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume"],
+      ["2026-09-26", "Saturday", "Easy Run", "4–6 miles easy, relaxed"],
+      ["2026-09-27", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-09-28", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-09-29", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-09-30", "Wednesday", "Easy Run", "4–6 miles easy, relaxed"],
+      ["2026-10-01", "Thursday", "CrossFit / Upper Body Strength", "Bench Press 4x5\nPull-Ups 4x8\nOverhead Press 3x6\nAccessory Core 3x12\nFinish: short metcon 8–10 min"],
+      ["2026-10-02", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume"],
+      ["2026-10-03", "Saturday", "Easy Run", "4–6 miles easy, relaxed"],
+      ["2026-10-04", "Sunday", "CrossFit / Full Body Strength", "Back Squat 4x5\nDeadlift 3x5\nKB Swings 3x15\nPush-Ups 3x20\nLight conditioning, no failure"],
+      ["2026-10-05", "Monday", "Long Run", "18–22 miles, MP segments"],
+      ["2026-10-06", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-10-07", "Wednesday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-08", "Thursday", "CrossFit / Upper Body Strength", "Mobility + light activation only"],
+      ["2026-10-09", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume | TAPER: reduce volume 40–60%"],
+      ["2026-10-10", "Saturday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-11", "Sunday", "CrossFit / Full Body Strength", "Mobility + light activation only"],
+      ["2026-10-12", "Monday", "Long Run", "Reduced long run (8–12 miles) | TAPER: reduce volume 40–60%"],
+      ["2026-10-13", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-10-14", "Wednesday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-15", "Thursday", "CrossFit / Upper Body Strength", "Mobility + light activation only"],
+      ["2026-10-16", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume | TAPER: reduce volume 40–60%"],
+      ["2026-10-17", "Saturday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-18", "Sunday", "CrossFit / Full Body Strength", "Mobility + light activation only"],
+      ["2026-10-19", "Monday", "Long Run", "Reduced long run (8–12 miles) | TAPER: reduce volume 40–60%"],
+      ["2026-10-20", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-10-21", "Wednesday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-22", "Thursday", "CrossFit / Upper Body Strength", "Mobility + light activation only"],
+      ["2026-10-23", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume | TAPER: reduce volume 40–60%"],
+      ["2026-10-24", "Saturday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-25", "Sunday", "CrossFit / Full Body Strength", "Mobility + light activation only"],
+      ["2026-10-26", "Monday", "Long Run", "Reduced long run (8–12 miles) | TAPER: reduce volume 40–60%"],
+      ["2026-10-27", "Tuesday", "Rest / Mobility", "Foam roll, hips/calves/hamstrings, optional yoga 20–30 min"],
+      ["2026-10-28", "Wednesday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-10-29", "Thursday", "CrossFit / Upper Body Strength", "Mobility + light activation only"],
+      ["2026-10-30", "Friday", "Quality Run", "Short MP: 4–6 mi total, reduced volume | TAPER: reduce volume 40–60%"],
+      ["2026-10-31", "Saturday", "Easy Run", "4–6 miles easy, relaxed | TAPER: reduce volume 40–60%"],
+      ["2026-11-01", "Sunday", "NYC MARATHON", "26.2 miles @ 8:35/mi | Goal time 3:45"],
+    ];
+
+    const STORAGE_KEY = "nyc2026_training_done";
+
+    function loadDoneMap() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveDoneMap(map) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+    }
+
+    let doneMap = loadDoneMap();
+
+    function todayISO() {
+      const d = new Date();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${d.getFullYear()}-${mm}-${dd}`;
+    }
+
+    function findIndexByDate(dateStr) {
+      return PLAN.findIndex(row => row[0] === dateStr);
+    }
+
+    let currentIndex = (() => {
+      const idx = findIndexByDate(todayISO());
+      return idx >= 0 ? idx : 0;
+    })();
+
+    const dateDisplay = document.getElementById("dateDisplay");
+    const dowDisplay = document.getElementById("dowDisplay");
+    const workoutDisplay = document.getElementById("workoutDisplay");
+    const notesDisplay = document.getElementById("notesDisplay");
+    const statusDot = document.getElementById("statusDot");
+    const statusText = document.getElementById("statusText");
+    const toggleDoneBtn = document.getElementById("toggleDoneBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const jumpDate = document.getElementById("jumpDate");
+    const progressText = document.getElementById("progressText");
+    const progressFill = document.getElementById("progressFill");
+
+    function render() {
+      if (currentIndex < 0 || currentIndex >= PLAN.length) return;
+
+      const row = PLAN[currentIndex];
+      const [date, dow, workout, notes] = row;
+
+      dateDisplay.textContent = date;
+      dowDisplay.textContent = dow;
+      workoutDisplay.textContent = workout || "—";
+      notesDisplay.textContent = notes || "—";
+
+      const isDone = !!doneMap[date];
+      if (isDone) {
+        statusDot.classList.remove("dot-pending");
+        statusDot.classList.add("dot-done");
+        statusText.textContent = "✓ Completed";
+        toggleDoneBtn.textContent = "Mark Not Done";
+        toggleDoneBtn.style.background = "#666";
+      } else {
+        statusDot.classList.remove("dot-done");
+        statusDot.classList.add("dot-pending");
+        statusText.textContent = "Not completed";
+        toggleDoneBtn.textContent = "Mark Done";
+        toggleDoneBtn.style.background = "";
+      }
+
+      jumpDate.value = date;
+
+      // Update progress
+      const completed = Object.keys(doneMap).length;
+      const percent = Math.round((completed / PLAN.length) * 100);
+      progressText.textContent = `Day ${currentIndex + 1} of ${PLAN.length} | Completed: ${completed} (${percent}%)`;
+      progressFill.style.width = percent + "%";
+
+      // Disable prev/next at boundaries
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === PLAN.length - 1;
+    }
+
+    toggleDoneBtn.addEventListener("click", () => {
+      const date = PLAN[currentIndex][0];
+      doneMap[date] = !doneMap[date];
+      if (!doneMap[date]) delete doneMap[date];
+      saveDoneMap(doneMap);
+      render();
+    });
+
+    prevBtn.addEventListener("click", () => {
+      if (currentIndex > 0) {
+        currentIndex -= 1;
+        render();
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex < PLAN.length - 1) {
+        currentIndex += 1;
+        render();
+      }
+    });
+
+    jumpDate.addEventListener("change", () => {
+      const val = jumpDate.value;
+      const idx = findIndexByDate(val);
+      if (idx >= 0) {
+        currentIndex = idx;
+        render();
+      } else {
+        alert("Date not found in training plan.");
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
